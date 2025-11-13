@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">MyApp</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/management}">Management</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/administration}">Administration</a>
+                </li>
+            </ul>
+            <form th:action="@{/logout}" method="post" class="d-flex">
+                <button type="submit" class="btn btn-outline-danger">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-body text-center">
+            <h2 class="card-title mb-4">Welcome to the Dashboard</h2>
+            <p class="lead"><strong><span sec:authentication="principal.username"></span></strong>
+                with role <strong><span sec:authentication="principal.authorities"></span></strong>
+                , this is your main control panel.
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
