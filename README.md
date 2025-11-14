@@ -53,6 +53,4 @@ role-based access control and custom login/logout functionality.
 
 ✨ Implement dynamic navbar visibility using sec:authorize
 
-✨ Improve error handling and access-denied pages
-
 
