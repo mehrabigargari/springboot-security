@@ -37,6 +37,9 @@ public class Config {
                         .permitAll()
                 )
                 .logout(logout -> logout.permitAll()
+                )
+                .exceptionHandling(handler -> handler
+                        .accessDeniedPage("/accessDenied")
                 );
 
         return http.build();
