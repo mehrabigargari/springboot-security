@@ -47,7 +47,5 @@ role-based access control and custom login/logout functionality.
 
 💡 Future Improvements
 
-✨ Replace in-memory authentication with a database (JPA or JDBC)
-
 ✨ Add registration and password encoding
 

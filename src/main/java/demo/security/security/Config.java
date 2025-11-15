@@ -3,21 +3,18 @@ package demo.security.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.sql.DataSource;
 
 @Configuration
 public class Config {
 
     @Bean
-    public InMemoryUserDetailsManager userDetailManger(){
-        UserDetails Masoud = User.builder().username("masoud").password("{noop}123").roles("admin").build();
-        UserDetails Farshid = User.builder().username("farshid").password("{noop}123").roles("manager").build();
-        UserDetails Sadeg = User.builder().username("sadeg").password("{noop}123").roles("employee").build();
-
-        return new InMemoryUserDetailsManager(Masoud,Farshid,Sadeg);
+    public UserDetailsManager userDetailManger(DataSource dataSource){
+        return new JdbcUserDetailsManager(dataSource);
     }
 
     @Bean
@@ -26,9 +23,9 @@ public class Config {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                         .requestMatchers("/showLoginPage", "/authenticateTheUser").permitAll()
-                        .requestMatchers("/dashboard").hasAnyRole("employee","manager","admin")
-                        .requestMatchers("/management").hasAnyRole("manager","admin")
-                        .requestMatchers("/administration").hasAnyRole("admin")
+                        .requestMatchers("/dashboard").hasAnyRole("EMPLOYEE","MANAGER","ADMIN")
+                        .requestMatchers("/management").hasAnyRole("MANAGER","ADMIN")
+                        .requestMatchers("/administration").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
