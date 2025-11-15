@@ -23,10 +23,10 @@
                 <li class="nav-item">
                     <a class="nav-link active" th:href="@{/}">Dashboard</a>
                 </li>
-                <li class="nav-item">
+                <li sec:authorize="hasAnyRole('manager','admin')" class="nav-item">
                     <a class="nav-link" th:href="@{/management}">Management</a>
                 </li>
-                <li class="nav-item">
+                <li sec:authorize="hasRole('admin')" class="nav-item">
                     <a class="nav-link" th:href="@{/administration}">Administration</a>
                 </li>
             </ul>

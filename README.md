@@ -51,6 +51,3 @@ role-based access control and custom login/logout functionality.
 
 ✨ Add registration and password encoding
 
-✨ Implement dynamic navbar visibility using sec:authorize
-
-
