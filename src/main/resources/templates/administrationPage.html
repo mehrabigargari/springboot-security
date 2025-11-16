@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Administration</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+
+    <style>
+        .card { border: 0; border-radius: 1rem; }
+        .table thead th { border-bottom: 0; }
+        .role-badge { margin-right: .25rem; font-size: .8rem; }
+        .btn-icon { padding: .35rem .55rem; }
+        .small-muted { font-size: .85rem; color: #6c757d; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">MyApp</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Dashboard</a>
+                </li>
+                <li sec:authorize="hasAnyRole('MANAGER','ADMIN')" class="nav-item">
+                    <a class="nav-link" th:href="@{/management}">Management</a>
+                </li>
+                <li sec:authorize="hasRole('ADMIN')" class="nav-item">
+                    <a class="nav-link active" th:href="@{/administration}">Administration</a>
+                </li>
+            </ul>
+
+            <div class="d-flex">
+                <button type="button" class="btn btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    Change Password
+                </button>
+
+                <form th:action="@{/logout}" method="post" class="d-flex">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-outline-danger">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0">User Administration</h3>
+            <div class="small-muted">Manage users and their roles</div>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEditUserModal" data-mode="add">
+                Add User
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-white">
+                    <tr>
+                        <th scope="col">Username</th>
+                        <th scope="col">Roles</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="user : ${users}">
+                        <td>
+                            <strong th:text="${user.username}">username</strong>
+                            <div class="small-muted" th:if="${user.accountNonLocked == false}">locked</div>
+                        </td>
+
+                        <td>
+                                <span th:each="auth : ${user.authorities}"
+                                      class="badge bg-secondary role-badge"
+                                      th:text="${#strings.replace(auth,'ROLE_','')}">ROLE</span>
+                        </td>
+
+                        <td class="text-end">
+                            <div class="btn-group" role="group" aria-label="actions">
+                                <button type="button"
+                                        class="btn btn-outline-primary btn-sm btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#addEditUserModal"
+                                        th:attr="data-mode='edit', data-username=${user.username}">
+                                    Edit
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#changeRolesModal"
+                                        th:attr="data-username=${user.username}"
+                                        th:attrappend=" data-roles=${user.authorities}">
+                                    Roles
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmDeleteModal"
+                                        th:attr="data-username=${user.username}">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="3" class="text-center small-muted py-4">No users found.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    </div>
+</div>
+
+<!-- Add/Edit User Modal -->
+<div class="modal fade" id="addEditUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form th:action="@{/administration/saveUser}" method="post" id="userForm">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" id="formMode" name="mode" value="add" />
+                <input type="hidden" id="originalUsername" name="originalUsername" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle">Add user</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="usernameInput" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="usernameInput" name="username" required minlength="3" />
+                    </div>
+
+                    <div class="mb-3" id="passwordGroup">
+                        <label for="passwordInput" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="passwordInput" name="password" required minlength="6" />
+                        <div class="form-text">For edit: leave blank to keep current password.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Start roles</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="ROLE_EMPLOYEE" id="rEmployee" name="roles" />
+                            <label class="form-check-label" for="rEmployee">Employee</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="ROLE_MANAGER" id="rManager" name="roles" />
+                            <label class="form-check-label" for="rManager">Manager</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="ROLE_ADMIN" id="rAdmin" name="roles" />
+                            <label class="form-check-label" for="rAdmin">Admin</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="userFormSubmit">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Roles Modal -->
+<div class="modal fade" id="changeRolesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form th:action="@{/administration/changeRoles}" method="post" id="rolesForm">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" id="rolesUsername" name="username" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Change roles for <span id="rolesForUsername"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="roleEmployeeR" name="roles" value="ROLE_EMPLOYEE" />
+                        <label class="form-check-label" for="roleEmployeeR">Employee</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="roleManagerR" name="roles" value="ROLE_MANAGER" />
+                        <label class="form-check-label" for="roleManagerR">Manager</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="roleAdminR" name="roles" value="ROLE_ADMIN" />
+                        <label class="form-check-label" for="roleAdminR">Admin</label>
+                    </div>
+                    <div class="small-muted mt-2">Uncheck all roles to disable the account (not recommended).</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save roles</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <form th:action="@{/administration/deleteUser}" method="post" id="deleteForm">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" id="deleteUsername" name="username" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete user</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong id="deleteUsernameLabel"></strong>?</p>
+                    <div class="small-muted">This action cannot be undone.</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <form th:action="@{/changePassword}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New password</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="6" />
+                        <div class="form-text">Min length 6 characters.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JS to populate modals -->
+<script>
+    (function () {
+        var userModal = document.getElementById('addEditUserModal');
+        if (userModal) {
+            userModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var mode = button.getAttribute('data-mode') || 'add';
+                document.getElementById('userModalTitle').textContent = mode === 'add' ? 'Add user' : 'Edit user';
+                document.getElementById('formMode').value = mode;
+
+                var usernameInput = document.getElementById('usernameInput');
+                var passwordGroup = document.getElementById('passwordGroup');
+
+                if (mode === 'add') {
+                    usernameInput.value = '';
+                    passwordGroup.style.display = '';
+                    document.getElementById('originalUsername').value = '';
+                    ['rEmployee','rManager','rAdmin'].forEach(function(id){ document.getElementById(id).checked = false; });
+                } else {
+                    var uname = button.getAttribute('data-username') || '';
+                    usernameInput.value = uname;
+                    document.getElementById('originalUsername').value = uname;
+                    passwordGroup.style.display = '';
+                    ['rEmployee','rManager','rAdmin'].forEach(function(id){ document.getElementById(id).checked = false; });
+                }
+            });
+        }
+
+        var rolesModal = document.getElementById('changeRolesModal');
+        if (rolesModal) {
+            rolesModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var username = button.getAttribute('data-username') || '';
+                document.getElementById('rolesUsername').value = username;
+                document.getElementById('rolesForUsername').textContent = username;
+
+                var raw = button.getAttribute('data-roles') || '';
+                var roles = raw.replace(/[\[\]\"]/g, '').split(',').map(function(s){return s.trim();});
+                document.getElementById('roleEmployeeR').checked = roles.indexOf('ROLE_EMPLOYEE') !== -1;
+                document.getElementById('roleManagerR').checked = roles.indexOf('ROLE_MANAGER') !== -1;
+                document.getElementById('roleAdminR').checked = roles.indexOf('ROLE_ADMIN') !== -1;
+            });
+        }
+
+        var delModal = document.getElementById('confirmDeleteModal');
+        if (delModal) {
+            delModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var username = button.getAttribute('data-username') || '';
+                document.getElementById('deleteUsername').value = username;
+                document.getElementById('deleteUsernameLabel').textContent = username;
+            });
+        }
+    })();
+</script>
+
+</body>
+</html>

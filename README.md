@@ -1,41 +1,63 @@
-🔐 Spring Security
+# 🔐 Spring Security
 
 A lightweight Spring Boot + Spring Security + Thymeleaf web application demonstrating
-role-based access control and custom login/logout functionality.
+role-based access control, user management, and a custom authentication flow.
 
+---
 
-🚀 Features
+# 🚀 Features
+
+### 🔑 Authentication & Authorization
 
 ✅ Custom login page using Thymeleaf
 
 ✅ Role-based access for dashboard, management, and administration pages
 
-✅ Dynamic user and role display after login
+✅ Dynamic display of logged-in user and roles
 
 ✅ Secure logout with CSRF protection
 
-✅ In-memory authentication (no database needed)
+✅ Password change modal allowing users to update their own password
 
-✅ Simple Bootstrap 5 responsive UI
+### 👥 User Management (NEW)
 
-✅ Configurable access rules via SecurityFilterChain
+The **Administration page** now includes full user management features backed by a real database:
 
+✅ Displays all registered users (excluding the signed-in admin)
 
+✅ Shows assigned roles/authorities
 
-🧱 Tech Stack
+✅ Buttons for modifying user roles
 
-| Layer / Purpose | Technology                                       |
-| --------------- | ------------------------------------------------ |
-| **Framework**   | Spring Boot                                      |
-| **Security**    | Spring Security (In-Memory Authentication)       |
-| **View Engine** | Thymeleaf + Thymeleaf Extras for Spring Security |
-| **Frontend**    | Bootstrap 5                                      |
-| **Build Tool**  | Maven                                            |
-| **Language**    | Java 17+                                         |
+✅ CRUD operations for user accounts
 
+Currently implemented with **JdbcUserDetailsManager**, storing users in your relational database.
 
+### 💄 UI
 
-🧩 Roles & Access
+✅ Simple, clean, responsive Bootstrap 5 design
+
+✅ Shared navbar with role-based visibility
+
+✅ Modal-based user interactions (password change)
+
+---
+
+# 🧱 Tech Stack
+
+| Layer / Purpose | Technology                                     |
+| --------------- | ---------------------------------------------- |
+| **Framework**   | Spring Boot                                    |
+| **Security**    | Spring Security + JDBC Authentication          |
+| **User Store**  | JdbcUserDetailsManager + relational database   |
+| **View Engine** | Thymeleaf + Thymeleaf Extras (Spring Security) |
+| **Frontend**    | Bootstrap 5                                    |
+| **Build Tool**  | Maven                                          |
+| **Language**    | Java 17+                                       |
+
+---
+
+# 🧩 Roles & Access
 
 | Role         | Accessible Pages                      |
 | ------------ | ------------------------------------- |
@@ -43,9 +65,26 @@ role-based access control and custom login/logout functionality.
 | **MANAGER**  | `/`, `/management`                    |
 | **ADMIN**    | `/`, `/management`, `/administration` |
 
+Admins additionally access the **User Management Table**, allowing administrative control over accounts and roles.
 
+---
 
-💡 Future Improvements
+# 📦 Summary
 
-✨ Add registration and password encoding
+This project provides a clean, extendable Spring Security setup with:
 
+✔ Custom login
+
+✔ Database-backed authentication
+
+✔ Role-based access
+
+✔ User management
+
+✔ Password change
+
+✔ Bootstrap UI
+
+Ready for expansion into a full admin panel or enterprise-style security module.
+
+---
